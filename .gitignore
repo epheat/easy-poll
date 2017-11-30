@@ -4,6 +4,7 @@ public/dist/build.js
 npm-debug.log
 yarn-error.log
 .env
+auth0-config.js
 
 # Editor directories and files
 .idea
