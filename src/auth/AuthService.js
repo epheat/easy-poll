@@ -56,7 +56,7 @@ export default class AuthService {
     var userProperties = JSON.parse(base64.decode(decodeThis));
     // console.log(userProperties);
 
-    EventBus.$emit('authChange', { authenticated: true, nickname: userProperties.nickname, userID: userProperties.sub })
+    EventBus.$emit('authChange', { authenticated: true, nickname: userProperties.nickname, accountID: userProperties.sub })
   }
 
   logout() {
