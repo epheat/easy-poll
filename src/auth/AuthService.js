@@ -14,6 +14,7 @@ export default class AuthService {
     this.setSession = this.setSession.bind(this)
     this.logout = this.logout.bind(this)
     this.isAuthenticated = this.isAuthenticated.bind(this)
+    this.getUserInfo = this.getUserInfo.bind(this)
 
     this.auth0 = new auth0.WebAuth({
       domain: AUTH_CONFIG.domain,
@@ -21,7 +22,7 @@ export default class AuthService {
       redirectUri: AUTH_CONFIG.callbackUrl,
       audience: AUTH_CONFIG.apiUrl,
       responseType: 'token id_token',
-      scope: 'openid profile'
+      scope: 'openid'
     })
   }
 
@@ -53,10 +54,10 @@ export default class AuthService {
 
     // get the userID
     var decodeThis = authResult.idToken.split(".")[1];
-    var userProperties = JSON.parse(base64.decode(decodeThis));
+    var userProperties = JSON.parse(atob(decodeThis));
     // console.log(userProperties);
 
-    EventBus.$emit('authChange', { authenticated: true, nickname: userProperties.nickname, accountID: userProperties.sub })
+    EventBus.$emit('authChange', { authenticated: true, nickname: userProperties.nickname, accountID: userProperties.sub, admin: userProperties.admin })
   }
 
   logout() {
@@ -75,6 +76,12 @@ export default class AuthService {
     // access token's expiry time
     let expiresAt = JSON.parse(localStorage.getItem('expires_at'))
     return new Date().getTime() < expiresAt
+  }
+
+  getUserInfo(accessToken) {
+    this.auth0.client.userInfo(accessToken, function(err, user) {
+      console.log(user);
+    })
   }
 
 }

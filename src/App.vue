@@ -20,7 +20,7 @@
       </div>
     </div>
     <!-- <button @click="debug">debug</button> -->
-    <button @click="debug2">toggle admin</button>
+    <!-- <button @click="debug2">toggle admin</button> -->
     <!-- <input id="removeThis" v-model="accountID"></input> -->
 
     <router-view :accountID="accountID" :auth="auth"></router-view>
@@ -33,7 +33,8 @@ import EventBus from './utils/EventBus.js'
 
 import AuthService from './auth/AuthService.js';
 const auth = new AuthService();
-const { login, logout, isAuthenticated, getAuth } = auth;
+const { login, logout, isAuthenticated, getUserInfo } = auth;
+import axios from 'axios';
 
 export default {
   name: 'app',
@@ -53,9 +54,20 @@ export default {
       this.loggedIn = authState.authenticated;
       this.accountID = authState.accountID;
       this.accountName = authState.nickname;
+      this.admin = authState.admin;
     });
     if (isAuthenticated()) {
       this.loggedIn = true;
+
+      var idToken = localStorage.getItem('id_token');
+
+      // get the userID, nickname, admin tag
+      var decodeThis = idToken.split(".")[1];
+      var userProperties = JSON.parse(atob(decodeThis));
+
+      this.accountName = userProperties.nickname;
+      this.accountID = userProperties.sub;
+      this.admin = userProperties.admin;
     }
   },
 

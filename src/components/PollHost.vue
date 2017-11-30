@@ -46,7 +46,12 @@ export default {
   // component methods
   methods: {
     createPoll: function() {
-      axios.post('/createPoll', { poll: this.newPoll })
+      var axiosConfig = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`
+        }
+      }
+      axios.post('/createPoll', { poll: this.newPoll }, axiosConfig)
       .then(response => {
         console.log(response.data);
       })
