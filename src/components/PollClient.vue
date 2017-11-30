@@ -2,6 +2,7 @@
   <div>
     <poll-selector @selectPoll="getPoll"></poll-selector>
     <h2 id="prompt">{{ prompt }}</h2>
+    
     <div id="response-options">
       <vote-button v-for="(response, i) in pollResponses"
         :response="response"
