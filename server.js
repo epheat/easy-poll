@@ -4,20 +4,57 @@ var dotenv = require('dotenv').config()
 var path = require('path')
 var shortid = require('shortid');
 
+var fallback = require('express-history-api-fallback')
+
+// required stuff for authentication
+const jwt = require('express-jwt');
+const jwks = require('jwks-rsa');
+const cors = require('cors');
+
 // Create an app using Express framework
 var app = express()
 
-// Tell express to use the body-parser middleware and to not parse extended bodies
-app.use(bodyParser.urlencoded({ extended: true }))
+// Tell express to use the body-parser middleware and to parse extended bodies
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+/*
+var corsOptions = {
+  allowedHeaders: 'Authorization'
+}
+app.use(cors(corsOptions));
+*/
+// https://enable-cors.org/server_expressjs.html
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  next();
+});
+
+// https://auth0.com/blog/vuejs2-authentication-tutorial/
+const jwtCheck = jwt({
+  secret: jwks.expressJwtSecret({
+        cache: true,
+        rateLimit: true,
+        jwksRequestsPerMinute: 5,
+        jwksUri: "https://easy-poll.auth0.com/.well-known/jwks.json"
+    }),
+    // This is the identifier we set when we created the API
+    audience: 'http://easy-poll.com',
+    issuer: "https://easy-poll.auth0.com/",
+    algorithms: ['RS256']
+});
 
 var port = process.env.PORT || 8000;
 var server = app.listen(port, function () {
   console.log("easy-poll is listening for HTTP requests on port " + port + ".")
 });
 
+var root = __dirname + '/public';
 // serve all files in the public directory
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(root));
+// fallback to index.html
+app.use(fallback('index.html', { root: root }));
 
 var io = require('socket.io')(server)
 var resultsComSocket = io.of('/resultsCom');  // the socket connection for the results screen
@@ -30,8 +67,6 @@ resultsComSocket.on('connection', function(socket) {
     console.log(polls);
   })
 })
-
-var currentPoll = new Poll(true, "Should this potential get a bid?", ["Yes", "No", "Abstain"], 1000);
 
 var polls = [
   new Poll(true, "Should this potential get a bid?", ["Yes", "No", "Abstain"], 1000),
@@ -76,7 +111,7 @@ function Poll(multiple, prompt, responses, duration) {
     }
     if (!foundVoteForThatAccount) {
       this.votes.push(vote); // no vote found from that accountID, so go ahead and add it
-      console.log(`account#${vote.accountID} has voted in poll#${pollID}}.`);
+      console.log(`account#${vote.accountID} has voted in poll#${this.pollID}.`);
     }
 
     // increment tallies for each response from the vote received
@@ -110,10 +145,10 @@ function Vote(accountID, selectedResponses) {
 
 // ----- Permission level: admin -----
 // get pollResults simply returns the entire currentPoll object
-app.get('/pollResults/:id', function(request, response) {
+app.post('/pollResults', jwtCheck, function(request, response) {
   var foundPoll = false;
   for (var i=0; i<polls.length; i++) {
-    if (polls[i].pollID == request.params.id) {
+    if (polls[i].pollID == request.body.pollID) {
       foundPoll = true;
       response.json(polls[i]);
     }
@@ -124,7 +159,7 @@ app.get('/pollResults/:id', function(request, response) {
   }
 })
 
-app.post('/createPoll', function(request, response) {
+app.post('/createPoll', jwtCheck, function(request, response) {
   var poll = new Poll(request.body.poll.allowMultiple, request.body.poll.prompt, request.body.poll.responses, request.body.poll.duration);
   polls.push(poll);
   response.send(poll.pollID);
@@ -132,7 +167,7 @@ app.post('/createPoll', function(request, response) {
 
 // ----- Permission level: user -----
 // get poll returns all active polls
-app.get('/poll', function(request, response) {
+app.post('/allPolls', jwtCheck, function(request, response) {
   var pollList = [];
   for (var i=0; i<polls.length; i++) {
     pollList.push({
@@ -149,10 +184,10 @@ app.get('/poll', function(request, response) {
 
 
 // get poll by id returns only the prompt, responses, and whether the poll allows multiple responses to be selected
-app.get('/poll/:id', function(request, response) {
+app.post('/poll', jwtCheck, function(request, response) {
   var foundPoll = false;
   for (var i=0; i<polls.length; i++) {
-    if (polls[i].pollID == request.params.id) {
+    if (polls[i].pollID == request.body.pollID) {
       foundPoll = true;
       response.json({
         prompt: polls[i].prompt,
@@ -170,7 +205,7 @@ app.get('/poll/:id', function(request, response) {
   }
 })
 // post userVote takes an accountID and a pollID as a parameter and returns that particular user's vote (if one exists for that user)
-app.post('/userVote', function(request, response) {
+app.post('/userVote', jwtCheck, function(request, response) {
   var foundUserVote = false;
   var pollIndex = -1;
   for (var i=0; i<polls.length; i++) { // first, find the poll with that pollID
@@ -195,7 +230,7 @@ app.post('/userVote', function(request, response) {
   }
 })
 // post vote registers a vote from a user
-app.post('/vote', function(request, response) {
+app.post('/vote', jwtCheck, function(request, response) {
   var foundPoll = false;
   for (var i=0; i<polls.length; i++) {
     if (polls[i].pollID == request.body.pollID) {

@@ -1,5 +1,5 @@
 <template>
-  <div class="poll-display-container" :style="containerStyle" @click="selectPoll">
+  <div class="poll-display-container" :class="containerClassList" @click="selectPoll">
     <div class="time-remaining-bar"><span :style="timeRemainingBarSpanStyle"></span></div>
     <h3 class="poll-display-prompt">{{ promptSpan }}</h3>
     <span>{{ responseListSpan }}</span>
@@ -51,21 +51,10 @@ export default {
   },
   // computed properties are recalculated any time its dependencies are updated
   computed: {
-    containerStyle: function() {
-      var opacity = 1;
-      var outline = 'none';
-      var cursor = 'pointer';
-      if (this.selected) {
-        outline = '2px solid green';
-      }
-      if (this.expired) {
-        opacity = 0.5;
-        cursor = 'not-allowed';
-      }
+    containerClassList: function() {
       return {
-        opacity: opacity,
-        outline: outline,
-        cursor: cursor
+        selected: this.selected,
+        expired: this.expired
       }
     },
     timeRemainingBarSpanStyle: function() {
@@ -130,7 +119,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .poll-display-container {
   display: inline-block;
   white-space: normal;
@@ -142,6 +131,14 @@ export default {
   margin-left: 5px;
   margin-right: 5px;
   background-color: rgb(209, 206, 200);
+  cursor: pointer;
+}
+.expired {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.selected {
+  outline: 2px solid green;
 }
 .poll-display-prompt {
   margin-top: 0px;

@@ -30,6 +30,7 @@ export default {
       selectedResponses: [],
       serverResponse: "",
       pollID: 0,
+      accessToken: "",
     }
   },
   mounted: function() {
@@ -66,8 +67,14 @@ export default {
       this.postVote();
     },
     postVote: function() {
-      axios.post('/vote', { pollID: this.pollID, accountID: this.accountID, selectedResponses: this.selectedResponses })
+      var axiosConfig = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`
+        }
+      }
+      axios.post('/vote', { pollID: this.pollID, accountID: this.accountID, selectedResponses: this.selectedResponses }, axiosConfig)
       .then( response => {
+        console.log(response);
         this.serverResponse = response.data;
       })
       .catch( error => {
@@ -77,8 +84,13 @@ export default {
     getPoll: function(pollID) {
       this.serverResponse = '';
       this.pollID = pollID;
+      var axiosConfig = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`
+        }
+      }
       // axios get poll by id of selected poll
-      axios.get('/poll/'+pollID)
+      axios.post('/poll', { 'pollID': pollID }, axiosConfig)
       .then( response => {
         this.prompt = response.data.prompt;
         this.pollResponses = response.data.responses;
@@ -89,7 +101,7 @@ export default {
       });
 
       // axios get user's vote for that poll
-      axios.post('/userVote', { accountID: this.accountID, pollID: pollID })
+      axios.post('/userVote', { accountID: this.accountID, pollID: pollID }, axiosConfig)
       .then( response => {
         if (response.data == "no vote") {
           this.selectedResponses = [];
@@ -122,7 +134,7 @@ export default {
   }
 }
 </script>
-<style>
+<style scoped>
 #response-options {
   padding: 15px;
   background-color: rgb(213, 213, 213);

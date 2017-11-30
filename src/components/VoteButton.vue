@@ -27,7 +27,7 @@ export default {
   }
 }
 </script>
-<style>
+<style scoped>
 .resp {
   background: linear-gradient(rgb(255, 255, 255), rgb(230, 230, 230));
   border-radius: 5px;

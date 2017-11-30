@@ -27,7 +27,10 @@ export default {
   // component methods
   methods: {
     getPolls: function() {
-      axios.get('/poll')
+      var headers = {
+        Authorization: `Bearer ${localStorage.getItem('access_token')}`
+      }
+      axios.post('/allPolls', undefined, { headers: headers } )
       .then(response => {
         this.activePolls = response.data;
       })

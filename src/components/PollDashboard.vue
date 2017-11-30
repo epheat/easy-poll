@@ -46,18 +46,14 @@ export default {
   },
   // component methods
   methods: {
-    fetchPoll: function() {
-      axios.get('/pollResults')
-      .then( response => {
-        this.poll = response.data;
-      })
-      .catch( error => {
-        console.log(error);
-      })
-    },
     getPollResults: function(pollID) {
+      var axiosConfig = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`
+        }
+      }
       this.pollID = pollID;
-      axios.get('/pollResults/'+pollID)
+      axios.post('/pollResults', {'pollID': pollID}, axiosConfig)
       .then( response => {
         this.poll = response.data;
       })
