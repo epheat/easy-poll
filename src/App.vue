@@ -11,7 +11,7 @@
       <div id="nav">
         <router-link to="/" class="navlink">Home</router-link>
         <router-link to="/client" v-if="loggedIn" class="navlink">Client</router-link>
-        <router-link to="/dashboard" v-if="loggedIn && admin" class="navlink">Dashboard</router-link>
+        <router-link to="/dashboard" v-if="loggedIn" class="navlink">Dashboard</router-link>
         <router-link to="/host" v-if="loggedIn && admin" class="navlink">Host</router-link>
       </div>
       <div id="login">

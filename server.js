@@ -133,8 +133,7 @@ function Poll(multiple, prompt, responses, duration) {
   }
 
   this.expired = function() {
-    let expiresAt = this.timestamp + this.duration;
-    // console.log(`expired: ${Date.now() > expiresAt}`);
+    var expiresAt = +this.timestamp + +this.duration; // unary operator for string->int conversion
     return Date.now() > expiresAt;
   }
 }
@@ -203,8 +202,8 @@ app.post('/activePolls', jwtCheck, function(request, response) {
       })
     }
   }
-  // console.log(`Date.now(): ${Date.now()}`);
-  // console.log(polls);
+  console.log(`Date.now(): ${Date.now()}`);
+  console.log(pollList);
   response.json(pollList);
 })
 
@@ -295,15 +294,24 @@ app.post('/userVote', jwtCheck, function(request, response) {
 // post vote registers a vote from a user
 app.post('/vote', jwtCheck, function(request, response) {
   var foundPoll = false;
+  var wasExpired = false;
   for (var i=0; i<polls.length; i++) {
     if (polls[i].pollID == request.body.pollID) {
       foundPoll = true;
-      polls[i].registerVote(new Vote(request.body.accountID, request.body.selectedResponses));
-      resultsComSocket.emit("resultsUpdated", {pollID: polls[i].pollID, poll: polls[i]});
+      if (!polls[i].expired()) {
+        polls[i].registerVote(new Vote(request.body.accountID, request.body.selectedResponses));
+        resultsComSocket.emit("resultsUpdated", {pollID: polls[i].pollID, poll: polls[i]});
+      } else {
+        wasExpired = true;
+      }
     }
   }
   if (foundPoll) {
-    response.send("Your vote has been tallied.");
+    if (wasExpired) {
+      response.send("That poll is expired.")
+    } else {
+      response.send("Your vote has been tallied.");
+    }
   } else {
     response.send("That poll does not exist.");
   }

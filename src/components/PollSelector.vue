@@ -42,6 +42,7 @@ export default {
       axios.post(this.query, undefined, axiosConfig)
       .then(response => {
         this.activePolls = response.data;
+        this.$set(this.activePolls, response.data);
       })
       .catch(error => {
         console.log(error);
