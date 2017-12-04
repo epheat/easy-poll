@@ -169,6 +169,7 @@ app.post('/createPoll', jwtCheck, function(request, response) {
   var poll = new Poll(request.body.poll.allowMultiple, request.body.poll.prompt, request.body.poll.responses, request.body.poll.duration);
   polls.push(poll);
   response.send(poll.pollID);
+  console.log(polls);
 })
 
 app.post('/deletePoll', jwtCheck, function(request, response) {
@@ -202,8 +203,8 @@ app.post('/activePolls', jwtCheck, function(request, response) {
       })
     }
   }
-  console.log(`Date.now(): ${Date.now()}`);
-  console.log(pollList);
+  // console.log(`Date.now(): ${Date.now()}`);
+  // console.log(pollList);
   response.json(pollList);
 })
 

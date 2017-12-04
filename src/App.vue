@@ -15,8 +15,8 @@
         <router-link to="/host" v-if="loggedIn && admin" class="navlink">Host</router-link>
       </div>
       <div id="login">
-        <span v-show="!loggedIn"><a href="#" @click="handleLogin">Log In</a></span>
-        <span v-show="loggedIn">Hello, {{ accountName }}! <a href="#" @click="handleLogout">Log Out</a></span>
+        <span v-show="!loggedIn"><a class="loginLink" href="#" @click="handleLogin">Log In</a></span>
+        <span v-show="loggedIn">Hello, {{ accountName }}! <a class="loginLink" href="#" @click="handleLogout">Log Out</a></span>
       </div>
     </div>
     <!-- <button @click="debug">debug</button> -->
@@ -173,6 +173,10 @@ body {
   grid-area: login;
   background-color: rgb(75, 82, 120);
   border-radius: 5px;
+}
+.loginLink {
+  color: white;
+  /*text-decoration: none*/
 }
 
 </style>
