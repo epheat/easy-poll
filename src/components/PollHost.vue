@@ -1,6 +1,14 @@
 <template>
   <div class="component-container">
-    <poll-selector></poll-selector>
+    <poll-selector
+      ref="pollSelector"
+      :allowSelectExpired="true"
+      :query="'/allPolls'"
+      :displayPollID="true"
+      @selectPoll="editPoll">
+    </poll-selector>
+    <p>Poll Selected: {{ selectedPollID }}</p>
+    <button class="delete-poll-button" @click="deletePoll">Delete</button>
     <h2>Create a new Poll:</h2>
     <div class="poll-creator-container">
       <label>Poll Prompt:</label><input type="text" v-model="newPoll.prompt"></input><br>
@@ -12,7 +20,7 @@
         </li>
       </ul>
       <br>
-      <label>Poll Duration (in seconds): </label><input type="number" v-model="newPoll.duration"></input><br>
+      <label>Poll Duration (in ms): </label><input type="number" v-model="newPoll.duration"></input><br>
       <label>Allow multiple responses from users?</label><input type="checkbox" v-model="newPoll.allowMultiple"></input><br>
 
       <button class="create-poll-button" @click="createPoll">Create Poll</button>
@@ -38,6 +46,7 @@ export default {
         duration: 0,
       },
       response: "",
+      selectedPollID: undefined
     }
   },
   created: function() {
@@ -45,6 +54,24 @@ export default {
   },
   // component methods
   methods: {
+    deletePoll: function() {
+      var axiosConfig = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`
+        }
+      }
+      axios.post('/deletePoll', { pollID: this.selectedPollID }, axiosConfig)
+      .then(response => {
+        console.log(response.data);
+        this.$refs.pollSelector.getPolls();
+      })
+      .catch(err => {
+        console.log(err);
+      })
+    },
+    editPoll: function(pollID) {
+      this.selectedPollID = pollID;
+    },
     createPoll: function() {
       var axiosConfig = {
         headers: {
@@ -54,6 +81,7 @@ export default {
       axios.post('/createPoll', { poll: this.newPoll }, axiosConfig)
       .then(response => {
         console.log(response.data);
+        this.$refs.pollSelector.getPolls();
       })
       .catch(err => {
         console.log(err);
@@ -128,5 +156,12 @@ export default {
   width: 20%;
   min-width: 100px;
   background: linear-gradient(rgb(99, 153, 108), rgb(98, 204, 95));
+}
+.delete-poll-button {
+  margin-top: 10px;
+  height: 30px;
+  width: 20%;
+  min-width: 100px;
+  background: linear-gradient(rgb(153, 99, 99), rgb(204, 95, 95));
 }
 </style>

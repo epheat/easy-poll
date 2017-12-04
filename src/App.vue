@@ -23,7 +23,7 @@
     <!-- <button @click="debug2">toggle admin</button> -->
     <!-- <input id="removeThis" v-model="accountID"></input> -->
 
-    <router-view :accountID="accountID" :auth="auth"></router-view>
+    <router-view :accountID="accountID" :admin="admin" :auth="auth"></router-view>
 
   </div>
 </template>

@@ -1,8 +1,8 @@
 <template>
   <div>
-    <poll-selector @selectPoll="getPoll"></poll-selector>
+    <poll-selector @selectPoll="getPoll" :query="'/activePolls'"></poll-selector>
     <h2 id="prompt">{{ prompt }}</h2>
-    
+
     <div id="response-options">
       <vote-button v-for="(response, i) in pollResponses"
         :response="response"
@@ -21,7 +21,7 @@ import axios from 'axios';
 
 export default {
   // props are local variables that receive changes from the parent element
-  props: ["accountID"],
+  props: ["accountID", "admin"],
   // in components, data must be a function
   data: function() {
     return {

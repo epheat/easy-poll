@@ -1,7 +1,14 @@
 <template>
   <div>
     <div class="active-polls-container">
-      <poll-display v-for="(poll, index) in activePolls" :poll="poll" :selected="selectedPoll == index" @selectPoll="selectPoll(index)"></poll-display>
+      <h3 v-if="activePolls.length == 0">No Polls Found.</h3>
+      <poll-display v-for="(poll, index) in activePolls"
+        :poll="poll"
+        :selected="selectedPoll == index"
+        :allowSelectExpired="allowSelectExpired"
+        :displayPollID="displayPollID"
+        @selectPoll="selectPoll(index)">
+      </poll-display>
     </div>
     <button @click="getPolls">Refresh Polls</button>
   </div>
@@ -13,7 +20,7 @@ import axios from 'axios';
 
 export default {
   // props are local variables that receive changes from the parent element
-  props: [],
+  props: ["allowSelectExpired", "query", "displayPollID"],
   // in Vue components, data must be a function
   data: function() {
     return {
@@ -32,7 +39,7 @@ export default {
           Authorization: `Bearer ${localStorage.getItem('access_token')}`
         }
       }
-      axios.post('/allPolls', undefined, axiosConfig )
+      axios.post(this.query, undefined, axiosConfig)
       .then(response => {
         this.activePolls = response.data;
       })

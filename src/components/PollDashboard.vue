@@ -1,6 +1,6 @@
 <template>
   <div id="dashboard">
-    <poll-selector @selectPoll="getPollResults"></poll-selector>
+    <poll-selector @selectPoll="getPollResults" :allowSelectExpired="true" :query="pollSelectorQuery"></poll-selector>
     <h2>{{ poll.prompt }}</h2>
     <div id="results" :style="barGraphGridTemplate">
       <template v-if="showResults">
@@ -27,7 +27,7 @@ var resultsComSocket = io('/resultsCom');
 
 export default {
   // props are local variables that receive changes from the parent element
-  props: ["accountID"],
+  props: ["accountID", "admin"],
   // in Vue components, data must be a function
   data: function() {
     return {
@@ -85,6 +85,13 @@ export default {
   },
   // computed properties are recalculated any time its dependencies are updated
   computed: {
+    pollSelectorQuery: function() {
+      if (this.admin) {
+        return "/allPolls";
+      } else {
+        return "/expiredPolls";
+      }
+    },
     barGraphGridTemplate: function() {
       return {
         gridTemplateColumns: "1fr repeat(" + this.poll.responses.length + ", 1fr 1fr)",

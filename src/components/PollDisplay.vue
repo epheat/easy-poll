@@ -4,6 +4,7 @@
     <h3 class="poll-display-prompt">{{ promptSpan }}</h3>
     <span>{{ responseListSpan }}</span>
     <p>{{ timeRemainingSpan }}</p>
+    <p v-if="displayPollID" class="pollID">#{{ poll.pollID }}</p>
   </div>
 </template>
 
@@ -13,11 +14,11 @@ const PROMPT_CHAR_LIMIT = 50;
 
 export default {
   // props are local variables that receive changes from the parent element
-  props: ["poll", "selected"],
+  props: ["poll", "selected", "allowSelectExpired", "displayPollID"],
   // in Vue components, data must be a function
   data: function() {
     return {
-      timeRemaining: this.poll.duration - Math.floor((Date.now() - this.poll.timestamp)/1000),
+      secondsRemaining: this.poll.duration/1000 - Math.floor((Date.now() - this.poll.timestamp)/1000),
       expired: false
     }
   },
@@ -27,8 +28,8 @@ export default {
   },
   methods: {
     decrementTime: function() {
-      this.timeRemaining--;
-      if (this.timeRemaining <= 0) {
+      this.secondsRemaining--;
+      if (this.secondsRemaining <= 0) {
         this.expire();
       } else {
         setTimeout(() => {
@@ -39,12 +40,12 @@ export default {
 
     expire: function() {
       this.expired = true;
-      this.timeRemaining = 0;
+      this.secondsRemaining = 0;
       // change style
     },
 
     selectPoll: function() {
-      if (!this.expired) {
+      if (this.allowSelectExpired || !this.expired) {
         this.$emit('selectPoll');
       }
     }
@@ -59,13 +60,13 @@ export default {
     },
     timeRemainingBarSpanStyle: function() {
       var color = '#484'
-      if (this.timeRemaining < 10) {
+      if (this.secondsRemaining < 10) {
         color = '#944';
-      } else if (this.timeRemaining < 60) {
+      } else if (this.secondsRemaining < 60) {
         color = '#ba3'
       }
       return {
-        width: `${this.timeRemaining/this.poll.duration*100}%`,
+        width: `${this.secondsRemaining / (this.poll.duration/1000) * 100}%`,
         backgroundColor: color
       }
     },
@@ -93,18 +94,18 @@ export default {
 
     timeRemainingSpan: function() {
       // 10 minutes or over
-      if (this.timeRemaining > 60*10 ) {
-        return `${Math.floor(this.timeRemaining/60)} minutes remaining.`;
-      } else  if (this.timeRemaining > 60) {
-        if (this.timeRemaining%60 < 10) {
-          return `${Math.floor(this.timeRemaining/60)}:0${this.timeRemaining%60} remaining.`;
+      if (this.secondsRemaining > 60*10 ) {
+        return `${Math.floor(this.secondsRemaining/60)} minutes remaining.`;
+      } else  if (this.secondsRemaining > 60) {
+        if (this.secondsRemaining%60 < 10) {
+          return `${Math.floor(this.secondsRemaining/60)}:0${this.secondsRemaining%60} remaining.`;
         } else {
-          return `${Math.floor(this.timeRemaining/60)}:${this.timeRemaining%60} remaining.`;
+          return `${Math.floor(this.secondsRemaining/60)}:${this.secondsRemaining%60} remaining.`;
         }
-      } else if (this.timeRemaining == 1) {
+      } else if (this.secondsRemaining == 1) {
         return '1 second remaining.';
       } else {
-        return `${this.timeRemaining} seconds remaining.`
+        return `${this.secondsRemaining} seconds remaining.`
       }
     },
 
@@ -135,7 +136,7 @@ export default {
 }
 .expired {
   opacity: 0.5;
-  cursor: not-allowed;
+  /*cursor: not-allowed;*/
 }
 .selected {
   outline: 2px solid green;
@@ -157,6 +158,9 @@ export default {
   height: 100%;
   background-color: grey;
   transition: width 1s;
+}
+.pollID {
+  color: rgb(177, 173, 166);
 }
 
 </style>

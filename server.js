@@ -69,9 +69,10 @@ resultsComSocket.on('connection', function(socket) {
 })
 
 var polls = [
-  new Poll(true, "Should this potential get a bid?", ["Yes", "No", "Abstain"], 1000),
-  new Poll(false, "Here's another poll?", ["Maybe", "Sometimes"], 200),
-  new Poll(true, "Finally, another poll prompt", ["Of course", "Not a chance", "NO way", "ehh... Maybe"], 10)
+  // WARNING: these all expire soon upon server restart
+  new Poll(true, "Should this potential get a bid?", ["Yes", "No", "Abstain"], 60000),
+  new Poll(false, "Here's another poll?", ["Maybe", "Sometimes"], 30000),
+  new Poll(true, "Finally, another poll prompt", ["Of course", "Not a chance", "NO way", "ehh... Maybe"], 5000)
 ];
 
 // Poll object constructor.
@@ -130,6 +131,12 @@ function Poll(multiple, prompt, responses, duration) {
     }
     return undefined;
   }
+
+  this.expired = function() {
+    let expiresAt = this.timestamp + this.duration;
+    // console.log(`expired: ${Date.now() > expiresAt}`);
+    return Date.now() > expiresAt;
+  }
 }
 
 // Vote object constructor
@@ -165,8 +172,64 @@ app.post('/createPoll', jwtCheck, function(request, response) {
   response.send(poll.pollID);
 })
 
+app.post('/deletePoll', jwtCheck, function(request, response) {
+  var foundPoll = false;
+  for (var i=0; i<polls.length; i++) {
+    if (polls[i].pollID == request.body.pollID) {
+      foundPoll = true;
+      polls.splice(i, 1);
+      response.send("Poll Deleted.")
+    }
+  }
+  if (!foundPoll) {
+    response.send("Poll not found with that ID.");
+  }
+})
+
 // ----- Permission level: user -----
 // get poll returns all active polls
+app.post('/activePolls', jwtCheck, function(request, response) {
+  var pollList = [];
+  for (var i=0; i<polls.length; i++) {
+    if (!polls[i].expired()) {
+      // TODO: can I just push polls[i] onto pollList?
+      pollList.push({
+        prompt: polls[i].prompt,
+        responses: polls[i].responses,
+        allowMultiple: polls[i].allowMultiple,
+        duration: polls[i].duration,
+        timestamp: polls[i].timestamp,
+        pollID: polls[i].pollID
+      })
+    }
+  }
+  // console.log(`Date.now(): ${Date.now()}`);
+  // console.log(polls);
+  response.json(pollList);
+})
+
+// get all expired polls, to check results of past polls
+app.post('/expiredPolls', jwtCheck, function(request, response) {
+  var pollList = [];
+  for (var i=0; i<polls.length; i++) {
+    if (polls[i].expired()) {
+      // TODO: can I just push polls[i] onto pollList?
+      pollList.push({
+        prompt: polls[i].prompt,
+        responses: polls[i].responses,
+        allowMultiple: polls[i].allowMultiple,
+        duration: polls[i].duration,
+        timestamp: polls[i].timestamp,
+        pollID: polls[i].pollID
+      })
+    }
+  }
+  // console.log(`Date.now(): ${Date.now()}`);
+  // console.log(polls);
+  response.json(pollList);
+})
+
+// get all expired polls, to check results of past polls
 app.post('/allPolls', jwtCheck, function(request, response) {
   var pollList = [];
   for (var i=0; i<polls.length; i++) {
